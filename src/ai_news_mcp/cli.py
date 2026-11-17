@@ -1,18 +1,24 @@
+"""Entry point for the `ai-news-mcp` command. Routes each subcommand to its module."""
+
 import argparse
 
 
 def install() -> None:
+    """Run once by the user: set up Claude Desktop, the daily job, and the first fetch."""
     raise SystemExit("install: not implemented yet")
 
 
 def fetch() -> None:
+    """Run daily by launchd: fetch AI stories from Hacker News into the database."""
     raise SystemExit("fetch: not implemented yet")
 
 
 def serve() -> None:
+    """Started by Claude Desktop: run the MCP server over stdio."""
     raise SystemExit("serve: not implemented yet")
 
 
+# Subcommand name -> (function to run, help text).
 COMMANDS = {
     "install": (install, "Add the server to Claude Desktop, set up the daily job, run the first fetch."),
     "fetch": (fetch, "Fetch today's AI news from Hacker News."),
