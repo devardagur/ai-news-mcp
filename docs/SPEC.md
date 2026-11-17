@@ -17,13 +17,15 @@ Open source, for anyone. Users install it with one command.
 
 ### Fetching
 - Runs every day at 09:00 local time.
-- If the computer was off at 09:00, the missed fetch runs on the next wake/boot.
+- Fetches once a day. If today's fetch has not succeeded yet (computer off, asleep, or an error), it is retried.
 - Scheduled by macOS launchd.
 
 ### Storage
 - SQLite at `~/.ai-news-mcp/news.db`.
 - Metadata only: title, URL, source, score, comment count, date.
+- Date is the story's post time on Hacker News.
 - Article text is not stored; it is fetched when requested.
+- Article text must be extracted cleanly so Claude can read it well.
 - Keep 30 days. Older stories are deleted.
 
 ### MCP server
@@ -49,4 +51,5 @@ Open source, for anyone. Users install it with one command.
 - Python 3.12, uv
 - Official `mcp` Python SDK
 - SQLite
+- `httpx` for HTTP, `trafilatura` for article text extraction
 - Published to PyPI
