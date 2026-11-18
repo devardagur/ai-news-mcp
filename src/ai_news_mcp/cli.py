@@ -2,6 +2,8 @@
 
 import argparse
 
+from ai_news_mcp import fetcher
+
 
 def install() -> None:
     """Run once by the user: set up Claude Desktop, the daily job, and the first fetch."""
@@ -10,7 +12,7 @@ def install() -> None:
 
 def fetch() -> None:
     """Run daily by launchd: fetch AI stories from Hacker News into the database."""
-    raise SystemExit("fetch: not implemented yet")
+    fetcher.run()
 
 
 def serve() -> None:
