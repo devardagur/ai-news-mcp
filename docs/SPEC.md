@@ -17,8 +17,8 @@ Open source, for anyone. Users install it with one command.
 
 ### Fetching
 - Runs every day at 09:00 local time.
-- Fetches once a day. If today's fetch has not succeeded yet (computer off, asleep, or an error), it is retried.
-- Scheduled by macOS launchd.
+- Fetches once a day. If today's fetch has not succeeded yet (computer off, asleep, or an error), it is retried every hour until 23:00.
+- Scheduled by macOS launchd. Output is written to `~/.ai-news-mcp/fetch.log`.
 
 ### Storage
 - SQLite at `~/.ai-news-mcp/news.db`.
@@ -27,6 +27,7 @@ Open source, for anyone. Users install it with one command.
 - Each story also keeps the day it was first fetched (first seen). It never changes after that.
 - Article text is not stored; it is fetched when requested.
 - Article text must be extracted cleanly so Claude can read it well.
+- Article text longer than 75,000 characters is cut. Claude tells the user and shares the link to the full article.
 - Keep 30 days. Older stories are deleted.
 
 ### MCP server

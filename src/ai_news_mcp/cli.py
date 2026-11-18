@@ -2,12 +2,12 @@
 
 import argparse
 
-from ai_news_mcp import fetcher, server
+from ai_news_mcp import fetcher, installer, server
 
 
 def install() -> None:
     """Run once by the user: set up Claude Desktop, the daily job, and the first fetch."""
-    raise SystemExit("install: not implemented yet")
+    installer.run()
 
 
 def fetch() -> None:

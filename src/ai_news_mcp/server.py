@@ -10,6 +10,9 @@ from ai_news_mcp import db, fetcher
 # WARNING log level keeps routine "HTTP Request" lines out of the logs.
 mcp = MCPServer("ai-news", log_level="WARNING")
 
+# Long PDFs can be hundreds of thousands of characters; the start is enough for a summary.
+MAX_ARTICLE_CHARS = 75_000
+
 
 def _parse_range(start_date: str | None, end_date: str | None) -> tuple[date, date]:
     # Dates are YYYY-MM-DD. Missing start means the oldest kept day; missing end means today.
@@ -71,6 +74,11 @@ def get_article(story_id: int) -> str:
         return f"Could not read the article ({error}). URL: {story['url']}"
     if not text:
         return f"No readable text was found in the article. URL: {story['url']}"
+    if len(text) > MAX_ARTICLE_CHARS:
+        text = text[:MAX_ARTICLE_CHARS] + (
+            "\n\n(Truncated: the article is too long, only the first part is shown. "
+            "Tell the user the summary covers only this part and share the link to read the full article.)"
+        )
     return f"# {story['title']}\nURL: {story['url']}\n\n{text}"
 
 
