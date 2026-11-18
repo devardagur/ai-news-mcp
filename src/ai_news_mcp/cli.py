@@ -2,7 +2,7 @@
 
 import argparse
 
-from ai_news_mcp import fetcher
+from ai_news_mcp import fetcher, server
 
 
 def install() -> None:
@@ -17,7 +17,7 @@ def fetch() -> None:
 
 def serve() -> None:
     """Started by Claude Desktop: run the MCP server over stdio."""
-    raise SystemExit("serve: not implemented yet")
+    server.run()
 
 
 # Subcommand name -> (function to run, help text).

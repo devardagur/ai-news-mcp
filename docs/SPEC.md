@@ -24,16 +24,18 @@ Open source, for anyone. Users install it with one command.
 - SQLite at `~/.ai-news-mcp/news.db`.
 - Metadata only: title, URL, source, score, comment count, date.
 - Date is the story's post time on Hacker News.
+- Each story also keeps the day it was first fetched (first seen). It never changes after that.
 - Article text is not stored; it is fetched when requested.
 - Article text must be extracted cleanly so Claude can read it well.
 - Keep 30 days. Older stories are deleted.
 
 ### MCP server
 - Tools:
+  - Latest news: stories first seen in the latest fetch (same list as the daily summary).
   - List news (by date or date range, up to 30 days back).
   - Search news by keyword in the title, with optional date range.
-  - Get an article's text by URL/ID, so Claude can summarize and research it.
-- Prompt: "Today's AI news".
+  - Get an article's text by ID, so Claude can summarize and research it.
+- Prompt: "Today's AI news". It shows the stories first seen in the latest fetch, so each story appears in exactly one daily summary.
 - Summarizing and research are done by Claude (the MCP client). No API key needed.
 
 ### Install
@@ -51,5 +53,5 @@ Open source, for anyone. Users install it with one command.
 - Python 3.12, uv
 - Official `mcp` Python SDK
 - SQLite
-- `httpx` for HTTP, `trafilatura` for article text extraction
+- `httpx` for HTTP, `trafilatura` for article text extraction, `pypdf` for PDF text extraction
 - Published to PyPI
