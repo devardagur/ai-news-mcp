@@ -40,11 +40,12 @@ Open source, for anyone. Users install it with one command.
 - Summarizing and research are done by Claude (the MCP client). No API key needed.
 
 ### Install
-- One command: `uvx ai-news-mcp install`
+- Clone the repo, then run one command: `uv run ai-news-mcp install`
 - It does:
   1. Adds the MCP server to Claude Desktop.
   2. Sets up the 09:00 launchd job.
   3. Runs the first fetch.
+- Claude Desktop and launchd run the code from the cloned folder, so the folder must stay in place.
 
 ### Platform
 - macOS only.
@@ -55,4 +56,3 @@ Open source, for anyone. Users install it with one command.
 - Official `mcp` Python SDK
 - SQLite
 - `httpx` for HTTP, `trafilatura` for article text extraction, `pypdf` for PDF text extraction
-- Published to PyPI
