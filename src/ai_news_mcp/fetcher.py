@@ -5,11 +5,16 @@ import asyncio
 import html
 import io
 import re
+import warnings
 from datetime import date
 
 import httpx
-import trafilatura
 from pypdf import PdfReader
+from urllib3.exceptions import DependencyWarning
+
+# trafilatura tries urllib3's optional SOCKS support on import, which warns when PySocks is missing. We use no proxy.
+warnings.filterwarnings("ignore", category=DependencyWarning)
+import trafilatura  # noqa: E402
 
 from ai_news_mcp import db
 

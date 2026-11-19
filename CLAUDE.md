@@ -16,7 +16,7 @@ ai-news-mcp/
 │   └── SPEC.md
 └── src/ai_news_mcp/
     ├── __init__.py
-    ├── cli.py         # Commands: install, fetch, serve
+    ├── cli.py         # Commands: install, uninstall, fetch, serve
     ├── server.py      # MCP tools and prompt
     ├── fetcher.py     # Hacker News fetch and AI filter
     ├── db.py          # SQLite access and 30-day cleanup

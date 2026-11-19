@@ -1,4 +1,5 @@
-"""One-time setup: add the server to Claude Desktop, schedule the daily fetch with launchd, and run the first fetch."""
+"""Install: add the server to Claude Desktop, schedule the daily fetch with launchd, and run the first fetch.
+Uninstall: undo all of that and delete the stored data."""
 
 import json
 import os
@@ -13,6 +14,8 @@ CLAUDE_CONFIG = Path.home() / "Library" / "Application Support" / "Claude" / "cl
 JOB_LABEL = "com.ai-news-mcp.fetch"
 JOB_PLIST = Path.home() / "Library" / "LaunchAgents" / f"{JOB_LABEL}.plist"
 LOG_PATH = db.DB_PATH.parent / "fetch.log"
+# Claude Desktop writes this log for each MCP server it runs.
+CLAUDE_LOG = Path.home() / "Library" / "Logs" / "Claude" / "mcp-server-ai-news.log"
 # Root of the cloned repo (this file is src/ai_news_mcp/installer.py).
 PROJECT_DIR = Path(__file__).resolve().parents[2]
 
@@ -57,11 +60,28 @@ def write_fetch_job() -> None:
     JOB_PLIST.write_bytes(plistlib.dumps(job))
 
 
+def unload_fetch_job() -> None:
+    """Remove the job from launchd. Fails quietly if it is not loaded."""
+    subprocess.run(["launchctl", "bootout", f"gui/{os.getuid()}/{JOB_LABEL}"], capture_output=True)
+
+
 def load_fetch_job() -> None:
     """Register the job with launchd. An older copy is removed first, so running install again is safe."""
-    domain = f"gui/{os.getuid()}"
-    subprocess.run(["launchctl", "bootout", f"{domain}/{JOB_LABEL}"], capture_output=True)
-    subprocess.run(["launchctl", "bootstrap", domain, str(JOB_PLIST)], check=True)
+    unload_fetch_job()
+    subprocess.run(["launchctl", "bootstrap", f"gui/{os.getuid()}", str(JOB_PLIST)], check=True)
+
+
+def remove_from_claude_desktop() -> None:
+    """Remove the "ai-news" entry from Claude Desktop's config, keeping all other settings."""
+    if not CLAUDE_CONFIG.exists():
+        return
+    config = json.loads(CLAUDE_CONFIG.read_text())
+    servers = config.get("mcpServers", {})
+    servers.pop("ai-news", None)
+    # Drop the section if nothing else is in it, so the config looks as it did before install.
+    if not servers:
+        config.pop("mcpServers", None)
+    CLAUDE_CONFIG.write_text(json.dumps(config, indent=2) + "\n")
 
 
 def run() -> None:
@@ -76,3 +96,26 @@ def run() -> None:
     fetcher.run()
 
     print("Done. Restart Claude Desktop to start using ai-news.")
+
+
+def uninstall() -> None:
+    """Undo install: remove the Claude Desktop entry and the daily job, and delete all stored data and logs."""
+    # A running server could recreate the database, and Claude Desktop could rewrite its log, after we delete them.
+    if subprocess.run(["pgrep", "-f", "ai-news-mcp serve"], capture_output=True).returncode == 0:
+        raise SystemExit(
+            "Claude Desktop is still running the ai-news server.\n"
+            "Quit Claude Desktop (Cmd+Q), then run uninstall again."
+        )
+
+    remove_from_claude_desktop()
+    print(f"Removed from Claude Desktop: {CLAUDE_CONFIG}")
+
+    unload_fetch_job()
+    JOB_PLIST.unlink(missing_ok=True)
+    print(f"Removed the daily fetch job: {JOB_PLIST}")
+
+    shutil.rmtree(db.DB_PATH.parent, ignore_errors=True)
+    CLAUDE_LOG.unlink(missing_ok=True)
+    print(f"Deleted the database and logs: {db.DB_PATH.parent}")
+
+    print("Done. You can now delete this cloned folder.")

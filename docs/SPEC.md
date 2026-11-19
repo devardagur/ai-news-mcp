@@ -47,6 +47,12 @@ Open source, for anyone. Users install it with one command.
   3. Runs the first fetch.
 - Claude Desktop and launchd run the code from the cloned folder, so the folder must stay in place.
 
+### Uninstall
+- One command: `uv run ai-news-mcp uninstall`
+- Claude Desktop must be quit first; otherwise uninstall stops without changing anything.
+- It removes the Claude Desktop entry and the launchd job, and deletes the database and logs.
+  The config looks as it did before install. Then the user deletes the cloned folder.
+
 ### Platform
 - macOS only.
 - Client: Claude Desktop only.
