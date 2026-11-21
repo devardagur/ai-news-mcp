@@ -24,6 +24,10 @@ LISTS = ("topstories", "beststories")
 MAX_PARALLEL = 20
 RETRY_DELAYS = (1, 2)  # Seconds to wait before the 2nd and 3rd attempt.
 
+# get_article only downloads web pages, plain text and PDFs, up to this size. Long papers can reach 30 MB.
+ARTICLE_TYPES = ("text/html", "application/xhtml+xml", "text/plain", "application/pdf")
+MAX_DOWNLOAD_BYTES = 50_000_000
+
 # Names of models and companies, plus general terms that usually appear when a new model is announced.
 AI_KEYWORDS = [
     "AI", "LLM", "GPT", "Claude", "Anthropic", "OpenAI", "Gemini", "machine learning",
@@ -123,13 +127,22 @@ def fetch_article_text(story: dict) -> str | None:
 
     # Some sites block requests without a browser-like User-Agent.
     headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) ai-news-mcp"}
-    response = httpx.get(story["url"], headers=headers, follow_redirects=True, timeout=20)
-    response.raise_for_status()
+    with httpx.stream("GET", story["url"], headers=headers, follow_redirects=True, timeout=20) as response:
+        response.raise_for_status()
+        content_type = response.headers.get("content-type", "")
+        # Model files, archives and videos have no article text, so stop before downloading them.
+        if content_type and not any(t in content_type for t in ARTICLE_TYPES):
+            raise ValueError(f"the link is not an article but a file of type {content_type}")
+        content = bytearray()
+        for chunk in response.iter_bytes():
+            content += chunk
+            if len(content) > MAX_DOWNLOAD_BYTES:
+                raise ValueError(f"the file is larger than {MAX_DOWNLOAD_BYTES // 1_000_000} MB")
 
-    if "application/pdf" in response.headers.get("content-type", ""):
-        return _pdf_text(response.content)
+    if "application/pdf" in content_type:
+        return _pdf_text(bytes(content))
     # trafilatura strips menus, ads and footers, keeping only the article body.
-    return trafilatura.extract(response.text, url=story["url"], output_format="markdown", include_links=True)
+    return trafilatura.extract(bytes(content), url=story["url"], output_format="markdown", include_links=True)
 
 
 def run() -> None:

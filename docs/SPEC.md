@@ -28,6 +28,7 @@ Open source, for anyone. Users install it with one command.
 - Article text is not stored; it is fetched when requested.
 - Article text must be extracted cleanly so Claude can read it well.
 - Article text longer than 75,000 characters is cut. Claude tells the user and shares the link to the full article.
+- Only web pages, plain text and PDFs up to 50 MB are downloaded. Other links (model files, archives, videos) are not downloaded; Claude shares the link instead.
 - Keep 30 days. Older stories are deleted.
 
 ### MCP server
