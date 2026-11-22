@@ -58,6 +58,7 @@ For a daily summary, pick the **Today's AI news** prompt from **+ → Plugins �
 | `list_news` | Stories from a date or date range (last 30 days) |
 | `search_news` | Stories whose title contains a keyword |
 | `get_article` | The readable text of a story's article |
+| `get_discussion` | A story's top Hacker News comments, in Hacker News order |
 
 ## Uninstall
 
@@ -86,7 +87,7 @@ ai-news-mcp/
 └── src/ai_news_mcp/
     ├── cli.py          # Commands: install, uninstall, fetch, serve
     ├── server.py       # MCP tools and prompt
-    ├── fetcher.py      # Hacker News fetch, AI filter, article text
+    ├── fetcher.py      # Hacker News fetch, AI filter, article text, comments
     ├── db.py           # SQLite storage and 30-day cleanup
     └── installer.py    # Claude Desktop config and launchd job
 ```

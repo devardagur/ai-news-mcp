@@ -20,9 +20,14 @@ from ai_news_mcp import db
 
 HN_API = "https://hacker-news.firebaseio.com/v0"
 HN_ITEM_PAGE = "https://news.ycombinator.com/item?id={id}"
+HN_ALGOLIA_API = "https://hn.algolia.com/api/v1"
 LISTS = ("topstories", "beststories")
 MAX_PARALLEL = 20
 RETRY_DELAYS = (1, 2)  # Seconds to wait before the 2nd and 3rd attempt.
+
+# get_discussion shows this many top-level comments, each with up to this many replies.
+TOP_COMMENTS = 20
+REPLIES_PER_COMMENT = 3
 
 # get_article only downloads web pages, plain text and PDFs, up to this size. Long papers can reach 30 MB.
 ARTICLE_TYPES = ("text/html", "application/xhtml+xml", "text/plain", "application/pdf")
@@ -107,12 +112,48 @@ async def fetch_ai_stories() -> list[dict]:
     ]
 
 
-def _hn_post_text(story_id: int) -> str | None:
-    # Text posts like "Ask HN" keep their body in the API's "text" field as simple HTML.
-    item = httpx.get(f"{HN_API}/item/{story_id}.json", timeout=20).json() or {}
-    text = re.sub(r"<p>", "\n\n", item.get("text", ""))
+def _clean_html(text: str) -> str:
+    # HN post and comment text is simple HTML: paragraphs, links and a few inline tags.
+    text = re.sub(r"<p>", "\n\n", text)
     text = re.sub(r"<[^>]+>", "", text)
-    return html.unescape(text).strip() or None
+    return html.unescape(text).strip()
+
+
+def _hn_post_text(story_id: int) -> str | None:
+    # Text posts like "Ask HN" keep their body in the API's "text" field.
+    item = httpx.get(f"{HN_API}/item/{story_id}.json", timeout=20).json() or {}
+    return _clean_html(item.get("text", "")) or None
+
+
+def _to_comment(node: dict) -> dict | None:
+    # Deleted and dead comments come back without an author or text.
+    if not node.get("author") or not node.get("text"):
+        return None
+    return {"id": node["id"], "author": node["author"], "text": _clean_html(node["text"])}
+
+
+def fetch_discussion(story_id: int) -> list[dict]:
+    """Return a story's top comments in Hacker News order, each with its first few replies."""
+    # Algolia gives the whole comment tree in one request, but in time order.
+    # The official API's "kids" list holds the top-level comments in the order Hacker News ranks them.
+    ranked = httpx.get(f"{HN_API}/item/{story_id}.json", timeout=20)
+    ranked.raise_for_status()
+    tree = httpx.get(f"{HN_ALGOLIA_API}/items/{story_id}", timeout=20)
+    tree.raise_for_status()
+
+    nodes = {node["id"]: node for node in tree.json().get("children", [])}
+    comments = []
+    for kid in (ranked.json() or {}).get("kids", []):
+        node = nodes.get(kid)
+        comment = _to_comment(node) if node else None
+        if comment is None:
+            continue
+        replies = [reply for reply in map(_to_comment, node.get("children", [])) if reply]
+        comment["replies"] = replies[:REPLIES_PER_COMMENT]
+        comments.append(comment)
+        if len(comments) == TOP_COMMENTS:
+            break
+    return comments
 
 
 def _pdf_text(content: bytes) -> str | None:

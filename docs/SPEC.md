@@ -37,6 +37,10 @@ Open source, for anyone. Users install it with one command.
   - List news (by date or date range, up to 30 days back).
   - Search news by keyword in the title, with optional date range.
   - Get an article's text by ID, so Claude can summarize and research it.
+  - Get a story's Hacker News discussion by ID, so Claude can summarize it next to the article: the overall reaction, the main points and objections, and the notable comments with links.
+    - Comments come from the Algolia HN API (whole tree in one request). The top-level order comes from the official HN API, so it matches the order on Hacker News.
+    - The top 20 comments, each with up to 3 replies, up to 30,000 characters. Deleted and dead comments are skipped.
+    - Comments are fetched when requested and not stored.
 - Prompt: "Today's AI news". It shows the stories first seen in the latest fetch, so each story appears in exactly one daily summary.
 - Summarizing and research are done by Claude (the MCP client). No API key needed.
 
